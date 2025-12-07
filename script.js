@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function () {
       if (target) {
         const navHeight = document.querySelector('.navbar').offsetHeight;
         const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
-
         window.scrollTo({
           top: targetPosition,
           behavior: 'smooth',
@@ -66,19 +65,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Form Submission Handler
+  // Form Submission Handler - Formspree Integration
   const contactForm = document.getElementById('contactForm');
 
   if (contactForm) {
-    contactForm.addEventListener('submit', function (e) {
+    contactForm.addEventListener('submit', async function (e) {
       e.preventDefault();
-
-      // Collect form data
-      const formData = new FormData(this);
-      const data = {};
-      formData.forEach((value, key) => {
-        data[key] = value;
-      });
 
       // Show loading state
       const submitBtn = this.querySelector('button[type="submit"]');
@@ -86,18 +78,38 @@ document.addEventListener('DOMContentLoaded', function () {
       submitBtn.innerHTML = '<span>Sending...</span>';
       submitBtn.disabled = true;
 
-      // Simulate form submission (replace with actual endpoint)
-      setTimeout(() => {
+      try {
+        const formData = new FormData(this);
+        
+        const response = await fetch('https://formspree.io/f/mnnebjbk', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          // Success
+          showNotification("Thank you! We'll be in touch within 24 hours.", 'success');
+          this.reset();
+        } else {
+          // Error from Formspree
+          const data = await response.json();
+          if (data.errors) {
+            showNotification(data.errors.map(e => e.message).join(', '), 'error');
+          } else {
+            showNotification('Something went wrong. Please try again.', 'error');
+          }
+        }
+      } catch (error) {
+        // Network error
+        showNotification('Connection error. Please check your internet and try again.', 'error');
+      } finally {
         // Reset button
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
-
-        // Show success message
-        showNotification("Thank you! We'll be in touch within 24 hours.", 'success');
-
-        // Reset form
-        this.reset();
-      }, 1500);
+      }
     });
   }
 
@@ -111,18 +123,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
-            <span>${message}</span>
-            <button class="notification-close">&times;</button>
-        `;
+      <span>${message}</span>
+      <button class="notification-close">&times;</button>
+    `;
 
     // Add styles
+    const bgColor = type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#3b82f6';
     Object.assign(notification.style, {
       position: 'fixed',
       top: '100px',
       left: '50%',
       transform: 'translateX(-50%)',
       padding: '16px 24px',
-      background: type === 'success' ? '#22c55e' : '#3b82f6',
+      background: bgColor,
       color: '#fff',
       borderRadius: '8px',
       boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
@@ -138,11 +151,11 @@ document.addEventListener('DOMContentLoaded', function () {
       const style = document.createElement('style');
       style.id = 'notificationStyles';
       style.textContent = `
-                @keyframes slideIn {
-                    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-                }
-            `;
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `;
       document.head.appendChild(style);
     }
 
@@ -192,11 +205,11 @@ document.addEventListener('DOMContentLoaded', function () {
   // Add animation styles
   const animationStyle = document.createElement('style');
   animationStyle.textContent = `
-        .animate-in {
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-        }
-    `;
+    .animate-in {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+  `;
   document.head.appendChild(animationStyle);
 
   // Stagger animations for grid items
