@@ -397,6 +397,14 @@ h3 {
 .preview-content {
   display: flex;
   min-height: 280px;
+  overflow: hidden;
+}
+
+.dashboard-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 0 0 var(--card-radius) var(--card-radius);
 }
 
 .preview-sidebar {
